@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>مغامرة قطرة الماء</title>
+<style>
+@font-face{font-family:Plex;font-weight:500;src:url(../../assets/fonts/f500.woff2)}
+@font-face{font-family:Plex;font-weight:700;src:url(../../assets/fonts/f700.woff2)}
+:root{--sky1:#BDE9FF;--sky2:#EAF8FF;--sea:#1E7BEA;--sea2:#0F4FB5;--ink:#0B2545;--sun:#FFB627;--good:#22C55E;--bad:#EF4444;--card:#ffffff;--accent:#7C5CFF}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:Plex,system-ui,sans-serif;color:var(--ink);background:var(--sky2);overflow:hidden;user-select:none}
+#app{position:relative;width:100%;height:100%;max-width:1100px;margin:0 auto;background:linear-gradient(180deg,var(--sky1),var(--sky2) 70%);overflow:hidden}
+header{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;z-index:20}
+.title{font-weight:700;font-size:22px}
+.stars{font-size:22px;font-weight:700;background:#fff;border-radius:999px;padding:6px 16px;box-shadow:0 4px 0 rgba(11,37,69,.12)}
+.steps{position:absolute;top:62px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:20}
+.steps i{width:38px;height:8px;border-radius:4px;background:rgba(11,37,69,.15)}
+.steps i.on{background:var(--accent)}
+.scene{position:absolute;inset:0;display:none}
+.scene.on{display:block}
+.panel{position:absolute;top:96px;left:50%;transform:translateX(-50%);width:min(92%,640px);background:var(--card);border-radius:22px;padding:18px 22px;text-align:center;box-shadow:0 6px 0 rgba(11,37,69,.12);z-index:15}
+.panel h2{font-size:24px;margin-bottom:6px}
+.panel p{font-size:18px;line-height:1.6;font-weight:500;color:#2c4a6e}
+.btn{display:inline-block;border:0;font:700 20px Plex,sans-serif;color:#fff;background:var(--accent);padding:14px 30px;border-radius:16px;box-shadow:0 5px 0 #5a3fd6;cursor:pointer;margin-top:12px}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #5a3fd6}
+.sea{position:absolute;bottom:0;left:0;right:0;height:22%;background:linear-gradient(180deg,var(--sea),var(--sea2));border-radius:40% 40% 0 0/14% 14% 0 0}
+.land{position:absolute;bottom:0;left:0;width:34%;height:30%;background:linear-gradient(180deg,#7BD389,#3FA35A);border-radius:0 70% 0 0}
+.drop{position:absolute;width:64px;height:84px;transition:none;z-index:10}
+.sun{position:absolute;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,#FFE38A,var(--sun));box-shadow:0 0 60px rgba(255,182,39,.8);cursor:grab;touch-action:none;z-index:12}
+.hint{position:absolute;font-size:16px;font-weight:700;background:#fff;padding:6px 12px;border-radius:12px;box-shadow:0 3px 0 rgba(0,0,0,.1);white-space:nowrap}
+.bar{position:absolute;bottom:26%;right:6%;width:28%;height:16px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.bar b{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sun),#FF7A00)}
+.mini{position:absolute;width:40px;height:52px;cursor:pointer;touch-action:none;z-index:11;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-12px)}}
+.cloud{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) scale(.4);transition:transform .5s,filter .5s;z-index:9}
+.cloud span{position:absolute;background:#fff;border-radius:50%;box-shadow:inset 0 -8px 0 rgba(11,37,69,.06)}
+.choices{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.choice{border:3px solid #dbe7f5;background:#fff;border-radius:16px;padding:12px 18px;font:700 18px Plex,sans-serif;color:var(--ink);cursor:pointer;min-width:120px}
+.choice.ok{border-color:var(--good);background:#eafbf0}
+.choice.no{border-color:var(--bad);background:#fdeeee;animation:shake .4s}
+@keyframes shake{25%{transform:translateX(6px)}75%{transform:translateX(-6px)}}
+.rain i{position:absolute;width:6px;height:26px;border-radius:3px;background:var(--sea);opacity:.8}
+.order{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.slot{width:120px;height:58px;border:3px dashed #b9cbe3;border-radius:14px;display:grid;place-items:center;font-weight:700;font-size:17px;color:#8aa2c2}
+.slot.fill{border-style:solid;border-color:var(--good);color:var(--ink);background:#eafbf0}
+.cards{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.card{background:var(--accent);color:#fff;font-weight:700;font-size:18px;padding:12px 18px;border-radius:14px;cursor:pointer;box-shadow:0 4px 0 #5a3fd6}
+.card.used{visibility:hidden}
+.toast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.6);opacity:0;background:#fff;border-radius:22px;padding:18px 30px;font-size:28px;font-weight:700;box-shadow:0 8px 0 rgba(0,0,0,.12);transition:.25s;z-index:40;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.cert{position:absolute;inset:0;display:grid;place-items:center;z-index:30}
+.cert .box{background:#fff;border-radius:28px;padding:34px 40px;text-align:center;width:min(92%,560px);border:6px solid var(--sun);box-shadow:0 10px 0 rgba(0,0,0,.1)}
+.cert h2{font-size:32px;margin:8px 0}
+.cert .big{font-size:56px}
+.qn{font-size:15px;color:#6b84a6;font-weight:700}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><div class="title">💧 مغامرة قطرة الماء</div><div class="stars">⭐ <span id="score">0</span></div></header>
+  <div class="steps" id="steps"><i></i><i></i><i></i><i></i><i></i></div>
+
+  <!-- start -->
+  <section class="scene on" id="s0">
+    <div class="sea"></div><div class="land"></div>
+    <div class="panel" style="top:28%">
+      <h2>أهلاً! أنا «قطرة» 💧</h2>
+      <p>ساعدني أرجع لبيتي في البحر بعد رحلة طويلة في السماء.<br>كل مرحلة تتعلم فيها جزء من دورة الماء.</p>
+      <button class="btn" id="startBtn">يلا نبدأ!</button>
+    </div>
+  </section>
+
+  <!-- 1 evaporation -->
+  <section class="scene" id="s1">
+    <div class="sea"></div><div class="land"></div>
+    <div class="panel"><h2>١. التبخّر</h2><p>اسحب الشمس فوق البحر عشان تسخّن الماء وتطلع «قطرة» للسماء.</p></div>
+    <div class="sun" id="sun" style="left:8%;top:30%"></div>
+    <div class="hint" id="sunHint" style="left:6%;top:calc(30% + 120px)">اسحبني ☝️</div>
+    <div class="bar"><b id="heat"></b></div>
+  </section>
+
+  <!-- 2 condensation -->
+  <section class="scene" id="s2">
+    <div class="sea"></div><div class="land"></div>
+    <div class="panel"><h2>٢. التكاثف</h2><p>في السماء الجو بارد. اضغط على القطرات الصغيرة عشان تتجمع وتصير غيمة.</p></div>
+    <div class="cloud" id="cloud"></div>
+    <div id="minis"></div>
+  </section>
+
+  <!-- 3 precipitation -->
+  <section class="scene" id="s3">
+    <div class="sea"></div><div class="land"></div>
+    <div class="cloud" id="cloud3" style="transform:translate(-50%,-50%) scale(1)"></div>
+    <div class="rain" id="rain"></div>
+    <div class="panel"><h2>٣. الهطول</h2><p>الغيمة ثقلت وصارت رمادية… وش بيصير الحين؟</p>
+      <div class="choices" id="c3">
+        <button class="choice" data-ok="0">الغيمة تطير بعيد</button>
+        <button class="choice" data-ok="1">تنزل القطرات مطراً</button>
+        <button class="choice" data-ok="0">الغيمة تختفي</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 collection / ordering -->
+  <section class="scene" id="s4">
+    <div class="sea"></div><div class="land"></div>
+    <div class="panel"><h2>٤. التجمّع ورجعة الرحلة</h2><p>«قطرة» رجعت للبحر! رتّب مراحل رحلتها بالترتيب الصحيح.</p>
+      <div class="order" id="slots"><div class="slot">١</div><div class="slot">٢</div><div class="slot">٣</div><div class="slot">٤</div></div>
+      <div class="cards" id="cards"></div>
+    </div>
+  </section>
+
+  <!-- 5 quiz -->
+  <section class="scene" id="s5">
+    <div class="sea"></div><div class="land"></div>
+    <div class="panel" style="top:110px"><div class="qn" id="qn"></div><h2 id="qt" style="font-size:22px;margin-top:6px"></h2><div class="choices" id="qc"></div></div>
+  </section>
+
+  <!-- end -->
+  <section class="scene" id="s6">
+    <div class="sea"></div><div class="land"></div>
+    <div class="cert"><div class="box">
+      <div class="big">🏆</div><h2>أحسنت يا بطل!</h2>
+      <p style="font-size:19px;font-weight:500;line-height:1.7">أكملت رحلة دورة الماء:<br>تبخّر ← تكاثف ← هطول ← تجمّع</p>
+      <p style="font-size:26px;font-weight:700;margin-top:10px">⭐ <span id="final">0</span> نجمة</p>
+      <button class="btn" id="again">العب مرة ثانية</button>
+    </div></div>
+  </section>
+
+  <svg class="drop" id="drop" viewBox="0 0 70 92" style="display:none"><path d="M35 2C35 2 4 44 4 60a31 31 0 0 0 62 0C66 44 35 2 35 2Z" fill="#4FC3FF" stroke="#fff" stroke-width="3"/><circle cx="25" cy="58" r="4.5" fill="#0B2545"/><circle cx="45" cy="58" r="4.5" fill="#0B2545"/><path d="M25 70q10 8 20 0" stroke="#0B2545" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>
+  <div class="toast" id="toast"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s), app=$('#app');
+let score=0, stage=0;
+const AC=window.AudioContext?new AudioContext():null;
+function beep(f,d=.15,t='sine'){if(!AC)return;try{AC.resume();const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.stop(AC.currentTime+d)}catch(e){}}
+const good=()=>{beep(660);setTimeout(()=>beep(880),120)}, bad=()=>beep(200,.25,'square');
+function addScore(n){score+=n;$('#score').textContent=score}
+function toast(t,ms=1100){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),ms)}
+function go(n){document.querySelectorAll('.scene').forEach(s=>s.classList.remove('on'));$('#s'+n).classList.add('on');stage=n;
+  document.querySelectorAll('#steps i').forEach((e,i)=>e.classList.toggle('on',i<n));
+  const d=$('#drop'); d.style.display=(n>=1&&n<=4)?'block':'none'; init[n]&&init[n]();}
+const drop=$('#drop'); app.appendChild(drop);
+function placeDrop(x,y){drop.style.left=x+'px';drop.style.top=y+'px'}
+function animDrop(x1,y1,x2,y2,ms,cb){const t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);placeDrop(x1+(x2-x1)*e,y1+(y2-y1)*e);k<1?requestAnimationFrame(f):cb&&cb()})(t0)}
+function cloudHTML(el){el.innerHTML='';[[0,50,160,100],[90,0,190,160],[220,40,150,110],[60,70,280,90]].forEach(([l,t,w,h])=>{const s=document.createElement('span');s.style.cssText=`left:${l-185}px;top:${t-80}px;width:${w}px;height:${h}px`;el.appendChild(s)})}
+const W=()=>app.clientWidth, H=()=>app.clientHeight;
+const init={};
+
+init[1]=()=>{const sun=$('#sun');let heat=0,drag=false,ox=0,oy=0;$('#heat').style.width='0%';
+  sun.style.left='8%';sun.style.top='30%';
+  placeDrop(W()*.72,H()*.80);
+  sun.onpointerdown=e=>{drag=true;sun.setPointerCapture(e.pointerId);const r=sun.getBoundingClientRect();ox=e.clientX-r.left;oy=e.clientY-r.top;$('#sunHint').style.display='none'};
+  sun.onpointermove=e=>{if(!drag)return;const a=app.getBoundingClientRect();const x=e.clientX-a.left-ox,y=e.clientY-a.top-oy;sun.style.left=x+'px';sun.style.top=Math.max(110,Math.min(y,H()*.55))+'px';
+    const cx=x+55; if(cx>W()*.45 && heat<100){heat=Math.min(100,heat+1.6);$('#heat').style.width=heat+'%';placeDrop(W()*.72,H()*.80-heat*H()*.0045);if(heat>=100){drag=false;done1()}}};
+  sun.onpointerup=()=>drag=false;
+  function done1(){good();addScore(1);toast('🔥 الماء تبخّر!');animDrop(W()*.72,H()*.35,W()*.5-32,H()*.30,900,()=>setTimeout(()=>go(2),500))}
+};
+
+init[2]=()=>{const c=$('#cloud');cloudHTML(c);c.style.transform='translate(-50%,-50%) scale(.35)';placeDrop(W()*.5-32,H()*.30);
+  const box=$('#minis');box.innerHTML='';let got=0;const N=5;
+  const pos=[[.18,.42],[.80,.40],[.26,.62],[.70,.62],[.48,.68]];
+  pos.forEach(([x,y],i)=>{const m=drop.cloneNode(true);m.removeAttribute('id');m.setAttribute('class','mini');m.style.display='block';m.style.left=(W()*x)+'px';m.style.top=(H()*y)+'px';m.style.animationDelay=(i*.3)+'s';
+    m.onpointerdown=()=>{if(m.dataset.done)return;m.dataset.done=1;beep(520+got*80);got++;m.style.transition='all .6s';m.style.left=(W()*.5-20)+'px';m.style.top=(H()*.36)+'px';m.style.opacity=0;
+      c.style.transform=`translate(-50%,-50%) scale(${.35+got*.13})`;
+      if(got===N){addScore(1);setTimeout(()=>{good();toast('☁️ صارت غيمة!');setTimeout(()=>go(3),1000)},500)}};
+    box.appendChild(m)});
+};
+
+init[3]=()=>{const c=$('#cloud3');cloudHTML(c);c.style.top='50%';c.style.filter='brightness(.75)';placeDrop(W()*.5-32,H()*.42);$('#rain').innerHTML='';
+  document.querySelectorAll('#c3 .choice').forEach(b=>{b.className='choice';b.onclick=()=>{if(b.dataset.ok==='1'){b.classList.add('ok');good();addScore(1);rain();}else{b.classList.add('no');bad();}}});
+  function rain(){const r=$('#rain');for(let i=0;i<26;i++){const d=document.createElement('i');d.style.left=(W()*.36+Math.random()*W()*.28)+'px';d.style.top=(H()*.56)+'px';r.appendChild(d);
+      d.animate([{transform:'translateY(0)',opacity:.9},{transform:`translateY(${H()*.26}px)`,opacity:.2}],{duration:700+Math.random()*500,iterations:3,delay:Math.random()*600})}
+    toast('🌧️ هطول!');animDrop(W()*.5-32,H()*.42,W()*.70,H()*.80,1800,()=>setTimeout(()=>go(4),700))}
+};
+
+init[4]=()=>{placeDrop(W()*.70,H()*.80);const names=['التبخّر','التكاثف','الهطول','التجمّع'];const slots=[...document.querySelectorAll('#slots .slot')];
+  slots.forEach((s,i)=>{s.className='slot';s.textContent=['١','٢','٣','٤'][i]});let next=0;const cards=$('#cards');cards.innerHTML='';
+  [2,0,3,1].forEach(i=>{const b=document.createElement('div');b.className='card';b.textContent=names[i];
+    b.onclick=()=>{if(i===next){good();slots[next].classList.add('fill');slots[next].textContent=names[i];b.classList.add('used');next++;if(next===4){addScore(1);toast('🌊 رتبتها صح!');setTimeout(()=>go(5),1100)}}else{bad();b.animate([{transform:'translateX(6px)'},{transform:'translateX(-6px)'},{transform:'none'}],{duration:300})}};cards.appendChild(b)});
+};
+
+const QS=[
+ ['وش اللي يسخّن ماء البحر ويبخّره؟',['القمر','الشمس','الرياح'],1],
+ ['لما يبرد بخار الماء في السماء يتحول إلى…',['غيوم','صخور','نار'],0],
+ ['المطر والبَرَد والثلج كلها أنواع من…',['التبخّر','الهطول','التكاثف'],1],
+ ['وين يتجمع الماء بعد ما ينزل؟',['في البحار والأودية','في الشمس','في الهواء فقط'],0],
+ ['دورة الماء…',['تصير مرة وحدة بس','تتكرر دائماً','توقف في الشتاء'],1]];
+init[5]=()=>{let q=0;show();function show(){const [t,o,a]=QS[q];$('#qn').textContent=`سؤال ${q+1} من ${QS.length}`;$('#qt').textContent=t;const c=$('#qc');c.innerHTML='';
+  let tried=false;o.forEach((x,i)=>{const b=document.createElement('button');b.className='choice';b.textContent=x;b.onclick=()=>{if(b.disabled)return;if(i===a){b.classList.add('ok');good();if(!tried)addScore(1);[...c.children].forEach(k=>k.disabled=true);setTimeout(()=>{q++;q<QS.length?show():(go(6))},900)}else{tried=true;b.classList.add('no');bad()}};c.appendChild(b)})}};
+init[6]=()=>{$('#final').textContent=score;beep(523);setTimeout(()=>beep(659),150);setTimeout(()=>beep(784),300)};
+$('#startBtn').onclick=()=>{AC&&AC.resume();go(1)};
+$('#again').onclick=()=>{score=0;$('#score').textContent=0;go(1)};
+</script>
+</body>
+</html>
