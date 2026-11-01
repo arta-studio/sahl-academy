@@ -6,7 +6,20 @@ const nav = document.getElementById('nav');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toast = (t) => { const e = document.getElementById('toast'); e.textContent = t; e.classList.add('show'); clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove('show'), 2600); };
 const loading = () => view.innerHTML = '<div class="loading"><span></span></div>';
-const waLink = (msg) => `https://wa.me/${C.whatsapp}?text=${encodeURIComponent(msg)}`;
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+// رابط مباشر بدون تحويلات وسيطة: على الجوال يفتح تطبيق الواتساب فوراً
+const waLink = (msg, phone = C.whatsapp) => {
+  const q = `phone=${phone}${msg ? '&text=' + encodeURIComponent(msg) : ''}`;
+  return isMobile ? `whatsapp://send?${q}` : `https://api.whatsapp.com/send?${q}`;
+};
+const waNum = n => { n = String(n || '').replace(/[^\d]/g, '').replace(/^00/, ''); return n.length === 8 ? '968' + n : n; };
+const waWeb = (msg, phone = C.whatsapp) => `https://api.whatsapp.com/send?phone=${phone}${msg ? '&text=' + encodeURIComponent(msg) : ''}`;
+// لو الواتساب مو مثبت على الجوال، نرجع لرابط الويب بعد لحظة
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href^="whatsapp://"]'); if (!a) return;
+  const fb = a.dataset.web; const t = setTimeout(() => { if (!document.hidden && fb) location.href = fb; }, 1500);
+  document.addEventListener('visibilitychange', () => clearTimeout(t), { once: true });
+});
 const AR = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 
 let state = { session: null, profile: null, lessons: null };
@@ -209,7 +222,7 @@ function pendingView() {
     <div class="big">⏳</div>
     <h1>حسابك جاهز — باقي التفعيل</h1>
     <p>عشان تفتح لك كل الدروس: تواصل معنا على الواتساب وادفع رسوم الكورس (<b>${AR(C.launchPrice)} ${esc(C.currency)}</b>)، وبنفعّل حسابك في أسرع وقت.</p>
-    <a class="btn wa" target="_blank" rel="noopener" href="${waLink(msg)}">ادفع وفعّل عبر الواتساب</a>
+    <a class="btn wa" ${isMobile ? '' : 'target="_blank" rel="noopener"'} href="${waLink(msg)}" data-web="${waWeb(msg)}">ادفع وفعّل عبر الواتساب</a>
     <p style="margin-top:18px;font-size:14px">وإلى ذلك الوقت، الدرس الأول مفتوح لك مجاناً.</p>
     <a class="btn ghost" href="#/lesson/1-1">شوف الدرس المجاني</a>
   </div>`;
@@ -317,7 +330,7 @@ async function pageAdmin(tab = 'members') {
       <td>${p.is_admin ? '<span class="chip">أدمن</span>' : p.approved ? '<span class="chip ok">مفعّل</span>' : '<span class="chip warn">بانتظار الدفع</span>'}</td>
       <td>${new Date(p.created_at).toLocaleDateString('ar-OM')}</td>
       <td><div class="acts">${p.is_admin ? '' : p.approved ? `<button class="btn small danger" data-act="revoke" data-id="${p.id}">إلغاء التفعيل</button>` : `<button class="btn small" data-act="approve" data-id="${p.id}">تفعيل</button>`}
-      ${p.phone ? `<a class="btn small wa" target="_blank" rel="noopener" href="https://wa.me/${esc(p.phone.replace(/[^\d]/g, ''))}">واتساب</a>` : ''}</div></td></tr>`).join('') || '<tr><td colspan="4" class="soon">ما فيه مشتركين بعد.</td></tr>';
+      ${p.phone ? `<a class="btn small wa" ${isMobile ? '' : 'target="_blank" rel="noopener"'} href="${waLink('', waNum(p.phone))}" data-web="${waWeb('', waNum(p.phone))}">واتساب</a>` : ''}</div></td></tr>`).join('') || '<tr><td colspan="4" class="soon">ما فيه مشتركين بعد.</td></tr>';
   };
   draw();
   document.getElementById('q').oninput = e => draw(e.target.value);
