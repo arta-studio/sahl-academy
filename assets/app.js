@@ -420,11 +420,15 @@ async function route() {
     view.innerHTML = `<div class="card pending"><div class="big">⚠️</div><h1>صار خطأ</h1><p>${esc(ex.message)}</p><a class="btn" href="#/">الرئيسية</a></div>`;
   }
 }
-sb.auth.onAuthStateChange(async (ev) => {
-  if (ev === 'PASSWORD_RECOVERY') { location.hash = '#/new-password'; }
-  if (ev === 'SIGNED_IN' || ev === 'SIGNED_OUT' || ev === 'USER_UPDATED') { await loadSession(); renderNav(); }
+// ملاحظة: لا نستدعي Supabase داخل هذا المستمع مباشرة (يسبب تعليق)، نؤجله خطوة
+sb.auth.onAuthStateChange((ev) => {
+  if (ev === 'PASSWORD_RECOVERY') { location.hash = '#/new-password'; return; }
+  if (ev === 'SIGNED_IN' || ev === 'SIGNED_OUT' || ev === 'USER_UPDATED') {
+    setTimeout(async () => { try { await loadSession(); } catch (e) {} renderNav(); }, 0);
+  }
 });
 window.addEventListener('hashchange', () => { if (location.hash === '#curriculum') return; route(); });
 document.addEventListener('click', e => { const a = e.target.closest('a[href="#curriculum"]'); if (a) { e.preventDefault(); document.getElementById('curriculum')?.scrollIntoView({ behavior: 'smooth' }); } });
-loadSession().then(route);
+// لا نخلي الصفحة تتعلق: لو تأخرت الجلسة نكمل بدونها
+Promise.race([loadSession(), new Promise(r => setTimeout(r, 6000))]).catch(() => {}).finally(route);
 })();
